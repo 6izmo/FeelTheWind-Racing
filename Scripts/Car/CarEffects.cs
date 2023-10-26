@@ -9,9 +9,6 @@ public class CarEffects : MonoBehaviour
     [SerializeField] private Light[] _rearLights;
     private bool _isActive;
 
-    [SerializeField] private ParticleSystem _dustRaisingCamera;
-    [SerializeField] private ParticleSystem _nitroParticle;
-
     [Header("PostProcessing")]
     [SerializeField] private PostProcessVolume _postProcessVolume;
     private ChromaticAberration _chromaticAberration;
@@ -26,6 +23,7 @@ public class CarEffects : MonoBehaviour
     private CarMovement _carMovement;
 
     [Header("NitroEffects")]
+    [SerializeField] private ParticleSystem _nitroParticle;
     private Coroutine _nitroEffects;
     private bool _isNitroEffects = false;
 
@@ -86,5 +84,4 @@ public class CarEffects : MonoBehaviour
         _carMovement.NitroEffects -= NitroEffects;
         _carMovement.RearLightsActive -= RearLights;
     }
- 
 }
