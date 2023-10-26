@@ -7,14 +7,15 @@ public class MainGameEvents : MonoBehaviour
 {
     public static MainGameEvents Instance;
 
+    private ÑheckPointProcessing _processing;
     [SerializeField] private UnityEvent LevelCompleteEvent;
     [SerializeField] private UnityEvent GameOverEvent;
+    private bool _gameOver = false;
+    private bool _levelCompleted = false;
 
-    private ÑheckPointProcessing _processing;
+    public bool IsGameOver => _gameOver;
 
-    public bool IsGameOver { get; private set; }
-
-    public bool LevelCompleted { get; private set; }
+    public bool LevelCompleted => _levelCompleted;
 
     private void Awake()
     {
@@ -33,14 +34,14 @@ public class MainGameEvents : MonoBehaviour
         if (LevelCompleted)
             return;
 
-        IsGameOver = true;
+        _gameOver = true;
         GameOverEvent?.Invoke();
     }
 
     private IEnumerator LevelComplete()
     {
         LevelCompleteEvent?.Invoke();
-        LevelCompleted = true;
+        _levelCompleted = true;
         float elapsedTime = 0f;
         float freezeTime = 5f;
 

@@ -57,7 +57,9 @@ public class WheelView : MonoBehaviour
         if (_wheelModel.IsGrounded && !_wheelModel.IsAsphalt && !_dustParticle.isPlaying && _wheelModel.CarMovementSpeed > 75f)       
             _dustParticle.Play();      
         else if ((!_wheelModel.IsGrounded) || _wheelModel.IsAsphalt || _wheelModel.CarMovementSpeed < 75f)       
-            _dustParticle.Stop();       
+            _dustParticle.Stop();
+
+        TireTrailEffect((_wheelModel.IsBraking || _wheelModel.IsDrifting) && _wheelModel.IsGrounded && _wheelModel.IsAsphalt);
     }
 
     public void TireTrailEffect(bool active)

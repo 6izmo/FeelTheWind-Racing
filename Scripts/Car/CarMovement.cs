@@ -24,6 +24,7 @@ public class CarMovement : MonoBehaviour
     [SerializeField] private float _startingForce = 9000f;
     private float _lastSpeed;
     private float _acceleration;
+    private bool _accelerated;
 
     [Header("Steering")]
     private float _ackermannAngleLeft;
@@ -54,11 +55,11 @@ public class CarMovement : MonoBehaviour
 
     public bool CanMove { get; set; }
 
-    public float Speed { get => _speed; }
+    public float Speed =>  _speed;
 
-    public float MaxSpeed { get => _carSpec.TopSpeed; }
+    public float MaxSpeed => _carSpec.TopSpeed;
 
-    public bool Accelerated { get; private set; }
+    public bool Accelerated => _accelerated;
 
     public void Initialize(CarSpecification carSpecification, CarAudio carAudio, InputValue inputValue)
     {
@@ -70,8 +71,8 @@ public class CarMovement : MonoBehaviour
         _nitroPercent = (1 / _accelerationTime);
 
         _allWheels = new List<Wheel>();
-        _allWheels.AddRange(from Wheel wheel in _carSpec.FrontWheels select wheel);
-        _allWheels.AddRange(from Wheel wheel in _carSpec.RearWheels select wheel);
+        _allWheels.AddRange(from FrontWheel frontWheel in _carSpec.FrontWheels select frontWheel);
+        _allWheels.AddRange(from RearWheel rearWheel in _carSpec.RearWheels select rearWheel);
     }
 
     private void Update()
@@ -89,13 +90,13 @@ public class CarMovement : MonoBehaviour
     {      
         _lastSpeed = _acceleration;
         _acceleration = ((_startingForce * _inputValue.AccelerationInput) + (_currentGear * _carSpec.EnginePower * Physics.gravity.y)) * Time.deltaTime;
-        Accelerated = _lastSpeed < _acceleration ? true : false;
+        _accelerated = _lastSpeed < _acceleration ? true : false;
 
         if (!CanMove)
             return;
 
-        foreach (Wheel wheel in _carSpec.RearWheels)
-            wheel.Acceleration(_acceleration);
+        foreach (RearWheel rearWheel in _carSpec.RearWheels)
+            rearWheel.Acceleration(_acceleration);
     }
 
     private void Steering()
@@ -116,17 +117,17 @@ public class CarMovement : MonoBehaviour
             _ackermannAngleRight = 0f;
         }
 
-        foreach (Wheel frontWheels in _carSpec.FrontWheels)
+        foreach (FrontWheel frontWheels in _carSpec.FrontWheels)
         {
-            if (frontWheels.FrontLeft)
+            if(frontWheels.Position == Wheel.WheelPos.FrontLeft)
                 frontWheels.Steering(_ackermannAngleLeft);
             else
                 frontWheels.Steering(_ackermannAngleRight);
-
+ 
             _canDrifting = frontWheels.CanDrifting;
         }
 
-        foreach (Wheel rearWheels in _carSpec.RearWheels)       
+        foreach (RearWheel rearWheels in _carSpec.RearWheels)       
             rearWheels.Drifting(_canDrifting, _carAudio);       
     }
 
