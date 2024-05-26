@@ -8,6 +8,8 @@ public class StartMenu : MonoBehaviour
     [SerializeField] private Image _startPanel;
     private const int _levelIndex = 1;
 
+    private void Start() => CursorRenderer.Visable(true);
+   
     public void OnPlayButtonClick()
     {
         SettingsData data = SettingsSaveLoadUtils.LoadSettingsData();

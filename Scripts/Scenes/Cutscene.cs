@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.Playables;
 
-
 public class Cutscene : MonoBehaviour
 {
     [SerializeField] private Image _canvasMessage;
@@ -18,6 +17,7 @@ public class Cutscene : MonoBehaviour
         _controls = new Controls();
         _controls.Main.SkipCutscene.performed += context => Skip();
     }
+
     private void Start() => StartCoroutine(HideMessage());
 
     private void Skip()

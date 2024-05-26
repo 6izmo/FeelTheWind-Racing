@@ -34,6 +34,4 @@ public class Sounds : MonoBehaviour
             yield return null;
         }
     }
-
-   
 }

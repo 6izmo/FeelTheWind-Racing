@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 
-public class CameraTextureUtils : MonoBehaviour
+public class CameraTextureUtils : MonoBehaviour    
 {
     private const float _farPlaneTreshold = 1f;
 

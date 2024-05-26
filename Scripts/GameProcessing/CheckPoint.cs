@@ -6,7 +6,7 @@ public class CheckPoint : MonoBehaviour
     [SerializeField] private ParticleSystem[] _particleSystems;
     [SerializeField] private float _timeBonus;
 
-    public float TimeBonus { get => _timeBonus; }
+    public float TimeBonus => _timeBonus;
 
     private void AddTimeBonus()
     {

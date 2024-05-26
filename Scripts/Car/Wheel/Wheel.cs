@@ -1,9 +1,15 @@
-using System;
 using UnityEngine;
-using System.Collections;
 
 public class Wheel : MonoBehaviour
 {
+    public enum WheelPos
+    {
+        FrontLeft,
+        FrontRight,
+        RearLeft,
+        RearRight,
+    }
+
     [Header("Suspension")]
     [SerializeField] private float _restLength;
     [SerializeField] protected float _wheelRadius;
@@ -14,38 +20,21 @@ public class Wheel : MonoBehaviour
     [Header("GroundCheck")]
     [SerializeField] private float _distanceRay;
     [SerializeField] private LayerMask _asphaltLayer;
+    private bool _isGrounded = false;
+    private bool _isAsphalt = false;
     private int _waterLayer = 4;
     private RaycastHit _hit;
 
     [Header("Steering")]
-    [SerializeField] private float _mass;
-    [SerializeField] private float _gripFactor;
-    [SerializeField] private float _steerTime;
-    public float _currentMass;
-    private float _startFrontWheelMass = 30f; 
-    private float _currentGripFactor;
-    private float _currentSteerAngle;
+    [SerializeField] protected float _mass;
+    [SerializeField] protected float _gripFactor;
+    protected float _currentMass;
+    protected float _currentGripFactor;
 
     [Header("Braking")]
     [SerializeField] private float _brakingForce = 70f;
-    private float _currentBrakingForce;
-    private bool _isBraking = false;
-
-    [Header("Drifting")]
-    private Coroutine _driftCoroutine;
-    private bool _isDrifting = false;
-
-    #region Acceleration
-    private Vector3 _acceleration;
-    private float _desiredAcceleration;
-    #endregion
-
-    #region Positions
-    public bool FrontLeft;
-    public bool FrontRight;
-    public bool RearLeft;
-    public bool RearRight;
-    #endregion
+    protected float _currentBrakingForce;
+    protected bool _isBraking = false;
 
     #region Suspension
     private Vector3 _suspensionForce;
@@ -59,21 +48,30 @@ public class Wheel : MonoBehaviour
     #endregion
 
     [SerializeField] private WheelView _wheelView;
+    [SerializeField] protected WheelPos _position;
+    protected CarMovement _carMovement;
+    protected Rigidbody _carRigidbody;
 
-    private CarMovement _carMovement;
-    private Rigidbody _carRigidbody;
+    private float _startFrontWheelMass = 30f;
+    private float _desiredAcceleration;
+    protected float _currentSteerAngle;
+    protected bool _isDrifting = false;
 
-    public bool IsGrounded { get; private set; }
+    public RaycastHit Hit => _hit;
 
-    public bool CanDrifting { get; private set; }
+    public WheelPos Position => _position;
 
-    public bool IsAsphalt { get; private set; }
+    public bool IsGrounded => _isGrounded;
 
-    public float CurrentSteerAngle { get => _currentSteerAngle; }
+    public bool IsAsphalt => _isAsphalt;
 
-    public float CarMovementSpeed { get => _carMovement.Speed; }
+    public bool IsBraking => _isBraking;
 
-    public RaycastHit Hit { get => _hit; }
+    public bool IsDrifting => _isDrifting;
+
+    public float CarMovementSpeed => _carMovement.Speed;
+
+    public float CurrentSteerAngle => _currentSteerAngle;
 
     public void Iniitialize(CarMovement carMovement)
     {
@@ -81,6 +79,7 @@ public class Wheel : MonoBehaviour
 
         _carRigidbody = transform.root.GetComponent<Rigidbody>();
         _wheelView.Initialize(this, _carRigidbody, _wheelRadius);
+        _currentMass = _position == WheelPos.FrontLeft || _position == WheelPos.FrontRight ? _startFrontWheelMass : _mass;
 
         _carMovement.ChangeGear += ChangeGear;
     }
@@ -90,7 +89,6 @@ public class Wheel : MonoBehaviour
         _maxLength = _restLength + _springTravel;
         _minLength = _restLength - _springTravel;
         _currentGripFactor = _gripFactor;
-        _currentMass = FrontLeft || FrontRight ? _startFrontWheelMass : _mass;
     }
 
     private void FixedUpdate()
@@ -101,11 +99,6 @@ public class Wheel : MonoBehaviour
             SuspensionForce();
             Friction();
         }
-    }
-
-    private void Update()
-    {
-        _wheelView.TireTrailEffect((_isBraking || _isDrifting) && IsGrounded && IsAsphalt);
     }
 
     private void SuspensionForce()
@@ -134,70 +127,10 @@ public class Wheel : MonoBehaviour
         _carRigidbody.AddForceAtPosition(_desiredAcceleration * frictionDirection * _currentMass, transform.position);
     }
 
-    public void Acceleration(float velocity)
-    {
-        if (IsGrounded && !_isBraking)
-        {
-            Vector3 frictionDirection = -transform.forward;
-            Vector3 wheelWorldVelocity = _carRigidbody.GetPointVelocity(transform.position);
-            float frictionForce = Vector3.Dot(frictionDirection, wheelWorldVelocity);
-            float desiredVelocity = frictionForce * _currentGripFactor * _currentBrakingForce;
-            velocity += desiredVelocity;
-            _acceleration = transform.forward * (velocity / Time.fixedDeltaTime);
-            _carRigidbody.AddForceAtPosition(_acceleration, transform.position);
-        }
-    }
-
-    public void Steering(float steerAngle)
-    {
-        _currentSteerAngle = Mathf.Lerp(_currentSteerAngle, steerAngle, _steerTime * Time.deltaTime);
-        transform.localRotation = Quaternion.Euler(Vector3.up * _currentSteerAngle);
-
-        CanDrifting = (Mathf.Round(_currentSteerAngle) == Mathf.Round(steerAngle)) && steerAngle != 0 ? true : false;
-    }
-
-    public void Drifting(bool canDrifiting, CarAudio carAudio)
-    {
-        if (!_isDrifting && canDrifiting && IsGrounded)
-        {
-            _isDrifting = true;
-            _driftCoroutine = StartCoroutine(DriftingCor());
-        }
-        else if ((_isDrifting && !canDrifiting) || !IsGrounded)
-        {
-            _isDrifting = false;
-            carAudio.TireWhistling(false);
-            if (_driftCoroutine != null)
-                StopCoroutine(_driftCoroutine);
-            _currentMass = _mass;
-        }
-
-        if(_isDrifting && IsGrounded && IsAsphalt)
-            carAudio.TireWhistling(true);
-        else if (!IsAsphalt || !IsGrounded)
-            carAudio.TireWhistling(false);
-
-    }
-
-    private IEnumerator DriftingCor()
-    {
-        float driftTime = 5f;
-        float elapsedTime = 0f;
-        float percent = (1f / 15f);
-            
-        while (elapsedTime < driftTime)
-        {
-            _currentMass -= percent;
-            _currentMass = _currentMass <= 0 ? 0 : _currentMass;
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-    }
-
     private void GroudCheck()
     {
-        IsGrounded = Physics.Raycast(transform.position, transform.up * -1f, out _hit, _distanceRay, ~(1 << _waterLayer)) ? true : false;
-        IsAsphalt = (_hit.collider != null && _hit.collider.gameObject.layer == 7) ? true : false;
+        _isGrounded = Physics.Raycast(transform.position, transform.up * -1f, out _hit, _distanceRay, ~(1 << _waterLayer)) ? true : false;
+        _isAsphalt = (_hit.collider != null && _hit.collider.gameObject.layer == 7) ? true : false;
     }
 
     public void HandleBrake(bool active)
@@ -213,7 +146,7 @@ public class Wheel : MonoBehaviour
         float frontPercentSlip = 1.35f;
         float rearPercentSlip = 1.15f;
 
-        if (FrontLeft || FrontRight)
+        if (_position == WheelPos.FrontLeft || _position == WheelPos.FrontRight)
         {
             _currentGripFactor = _gripFactor - (currentGear * frontPercentSlip);
 

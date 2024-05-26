@@ -1,6 +1,6 @@
-using System.Collections;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
+using System.Collections;
 
 public class Timer : MonoBehaviour
 {
@@ -37,7 +37,6 @@ public class Timer : MonoBehaviour
         MainGameEvents.Instance.GameOver();
         this.enabled = false;
     }
-
 
     public void StartCoroutineTime(CarMovement carMovement) => StartCoroutine(TimeStartTick(carMovement));
 

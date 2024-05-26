@@ -50,6 +50,7 @@ public class CarAudio : MonoBehaviour
         UpdateVolume();
         UpdatePitch();
     }
+
     private void ChangeGear(int old, int current)
     {
         switch (current)
@@ -80,6 +81,7 @@ public class CarAudio : MonoBehaviour
         _audioSourceBraking.volume = _highFade * _decFade;
         _audioSourceMove.volume = _highFade * _decFade;
     }
+
     private void UpdatePitch()
     {
         _pitch = Mathf.Lerp(_lowPitchMin, _lowPitchMax, _carMovement.Speed / _carMovement.MaxSpeed);
@@ -136,6 +138,8 @@ public class CarAudio : MonoBehaviour
 
     private void OnDisable()
     {
+        _carMovement.NitroEffects -= NitroSound;
         _carMovement.ChangeGear -= ChangeGear;
+        _carMovement.CollisionSound -= CollisionSound;
     }
 }

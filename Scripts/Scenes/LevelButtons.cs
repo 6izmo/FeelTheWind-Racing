@@ -17,6 +17,7 @@ public class LevelButtons : MonoBehaviour
             return;
 
         _paused = !_paused;
+        CursorRenderer.Visable(_paused);
         Time.timeScale = _paused ? 0.0f : 1.0f;
         _pausePanel.gameObject.SetActive(_paused);
     }
